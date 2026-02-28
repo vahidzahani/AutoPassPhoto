@@ -4,14 +4,14 @@
 # adding borders, watermark, and exporting as high-quality JPEG images.
 
 from PIL import Image, ImageEnhance, ImageFilter, ImageDraw, ImageFont
-from rembg import remove,new_session
+from rembg import remove
 import io, json
 
 # Constants
 DPI = 300
 PHOTO_CM = (3, 4)
 SHEET_CM = (13, 18)
-GAP_CM = 0.2
+GAP_CM = 0.1
 MARGIN_CM = 0.5
 TEXT_MARGIN_CM = 0.3
 FONT_PATH = "cour.ttf"
@@ -22,33 +22,11 @@ def cm_to_px(cm):
 
 # Step 1: Remove background
 def remove_background(image_path):
-    # پیش‌پردازش سبک
-    img = Image.open(image_path).convert("RGB")
-    img = ImageEnhance.Contrast(img).enhance(1.15)
-    img = ImageEnhance.Brightness(img).enhance(0.93)
-
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    input_data = buf.getvalue()
-
-    # مدل + alpha matting قوی برای لباس سفید
-    output_data = remove(
-        input_data,
-        session=new_session("isnet-general-use"),   # یا u2netp
-        alpha_matting=True,
-        alpha_matting_foreground_threshold=245,     # مهم
-        alpha_matting_background_threshold=8,
-        alpha_matting_erode_size=4,
-    )
-
+    with open(image_path, "rb") as f:
+        input_data = f.read()
+    output_data = remove(input_data)
     img_rgba = Image.open(io.BytesIO(output_data)).convert("RGBA")
     return img_rgba
-# def remove_background(image_path):
-#     with open(image_path, "rb") as f:
-#         input_data = f.read()
-#     output_data = remove(input_data)
-#     img_rgba = Image.open(io.BytesIO(output_data)).convert("RGBA")
-#     return img_rgba
 
 # Step 2: Place on white background
 def place_on_white(img_rgba):
